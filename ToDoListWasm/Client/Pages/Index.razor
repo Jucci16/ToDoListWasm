@@ -1,0 +1,37 @@
+﻿@page "/"
+@using ToDoListWasm.Dto
+@inject HttpClient _httpClient
+@inject NavigationManager _navManager
+
+<PageTitle>Index</PageTitle>
+
+@if (_toDoCollections is null)
+{
+    <p>Loading ... </p>
+}
+else
+{
+    <h2 style="text-align: center; margin-bottom: 1rem">To Do Lists</h2>
+
+    <div class="" style="display: flex; justify-content:center; flex-wrap: wrap">
+        @foreach (var toDoCollection in _toDoCollections)
+        {
+            <ToDoListWasm.Client.Shared.CollectionComponent Collection="toDoCollection" />
+        }
+    </div>
+
+}
+
+@code {
+    private List<ToDoCollectionDto>? _toDoCollections { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await _httpClient.GetAsync(Path.Combine(_httpClient!.BaseAddress!.AbsoluteUri, "/api/ToDoCollection"));
+        _toDoCollections = (await response.Content.ReadFromJsonAsync<List<ToDoCollectionDto>>()) ?? new();
+        if (!_toDoCollections.Any()) _navManager.NavigateTo("/create-collection");
+
+        await base.OnInitializedAsync();
+
+    }
+}

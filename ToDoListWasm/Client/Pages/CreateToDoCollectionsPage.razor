@@ -1,0 +1,73 @@
+﻿@page "/create-collection"
+@using ToDoListWasm.Dto
+@inject HttpClient _httpClient
+
+<PageTitle>Create A New To Do List</PageTitle>
+<h3 style="text-align: center; margin-bottom: 3rem">Click To Edit</h3>
+
+<div class="card" style="max-width: 18rem; margin-left:auto; margin-right: auto">
+
+    <div class="card-header">
+        <input type="text" style="border:none; font-weight: bold" class="card-title" placeholder="@NamePlaceholder" @bind-value="_title" />
+    </div>
+    <div class="card-body d-flex flex-column" style="min-height: 20rem">
+
+
+        @foreach (var todo in _toDoItems)
+        {
+            <div>
+                <input type="text" style="border:none;" class="" placeholder="@ItemPlaceholder" @bind="todo.Description" />
+            </div>
+        }
+
+        <button class="btn btn-block" style="display: block; margin-left: auto; margin-right: auto; margin-top: 1rem" @onclick="CreateNewToDo" onsubmit="#"><span class="oi oi-plus"></span></button>
+        <div class="flex: 1"></div>
+        <button class=" btn btn-primary btn-lg" style="display: block; margin-left: auto; margin-right: auto; margin-top: auto; margin-bottom: 0;" @onclick="SaveList">Save</button>
+
+    </div>
+
+</div>
+
+@code {
+    private string _title { get; set; }
+
+    private const string NamePlaceholder = "List Name";
+
+    private const string ItemPlaceholder = "To Do";
+
+    private List<ToDoItemDto> _toDoItems { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _title = DefaultTitle();
+        _toDoItems = new()
+            {
+                DefaultItem()
+            };
+    }
+
+    private ToDoItemDto DefaultItem() => new ToDoItemDto { Description = "" };
+
+    private string DefaultTitle() => "";
+
+    private void CreateNewToDo() => _toDoItems.Add(DefaultItem());
+
+    private async Task SaveList()
+    {
+        var newCollection = new ToDoCollectionDto
+            {
+                Name = _title,
+                Items = _toDoItems
+            };
+
+        var response = await _httpClient.PostAsync(Path.Combine(_httpClient!.BaseAddress!.AbsoluteUri, "/api/todocollection"), JsonContent.Create(newCollection));
+
+        _title = DefaultTitle();
+        _toDoItems = new() { DefaultItem() };
+
+        StateHasChanged();
+    }
+
+}

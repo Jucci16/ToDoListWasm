@@ -1,0 +1,58 @@
+﻿@using ToDoListWasm.Dto
+@inject HttpClient _httpClient
+
+@if (Collection is null)
+{
+    
+} else
+{
+    <div class="card" style="min-width: 18rem; max-width: 32rem; margin-left: 1rem; margin-right: 1rem; margin-bottom: 2rem;">
+
+    <div class="card-header">
+        @Collection.Name
+        <span class="oi oi-minus text-danger float-end" style="cursor: pointer"  @onclick="RemoveList"></span>
+    </div>
+    <div class="card-body d-flex flex-column" style="min-height: 20rem">
+        <table class="table-striped">
+            <tbody>
+                @foreach (var todo in Collection.Items)
+                {
+                    <tr>
+                        <td>@todo.Description</td>
+                        <td width=10% style="cursor: pointer" @onclick="() => RemoveToDoItem(todo)"><span class="oi oi-x text-danger" ></span></td>
+                    </tr>
+                    
+                }
+            </tbody>
+        </table>
+
+
+    </div>
+
+</div>
+}
+
+
+
+@code {
+    [Parameter]
+    public ToDoCollectionDto? Collection { get; set; } = null;
+
+    private async Task RemoveToDoItem(ToDoItemDto item)
+    {
+        var response = await _httpClient.DeleteAsync(Path.Combine(_httpClient!.BaseAddress!.AbsoluteUri, $"/api/ToDoItem?id={item.Id}"));
+        if (Collection is null || Collection.Items is null || !Collection.Items.Any()) 
+            return;
+
+        Collection.Items.Remove(item);
+        StateHasChanged();
+    }
+
+    private async Task RemoveList()
+    {
+        var response = await _httpClient.DeleteAsync(Path.Combine(_httpClient!.BaseAddress!.AbsoluteUri, $"/api/ToDoCollection?id={Collection.Id}"));
+        Collection = null;
+
+        StateHasChanged();
+    }
+}
